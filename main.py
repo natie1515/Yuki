@@ -19,7 +19,6 @@ import datetime
 import random
 import string
 import threading
-from pydub import AudioSegment
 
 # Configuración
 BOT_TOKEN = 'MTI0NTU0NzcwOTg3NjkyODU0Mw.GliFcU.uK7Mt1qo8SPpGK1WQFCkD8J9lnj8OarnAx7O2M'  # Reemplaza con tu token
@@ -1260,34 +1259,6 @@ async def play2(ctx, url: str):
         os.remove(audio_file)  # Elimina el archivo después de enviarlo
     else:
         await ctx.send("Hubo un error al descargar el audio.")
-
-#descargador audio mp3
-
-ydl_opts = {
-    'format': 'bestaudio/best',
-    'outtmpl': '%(title)s.%(ext)s',
-}
-
-@bot.event
-async def on_ready():
-    print(f'Bot conectado como {bot.user}')
-
-@bot.command()
-async def play3(ctx, url: str):
-    await ctx.send("Descargando audio...")
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url, download=True)
-        filename = ydl.prepare_filename(info)
-    
-    # Convertir a MP3 con pydub
-    audio = AudioSegment.from_file(filename)
-    mp3_filename = filename.rsplit(".", 1)[0] + ".mp3"
-    audio.export(mp3_filename, format="mp3")
-    os.remove(filename)  # Eliminar el archivo original
-    
-    # Enviar el archivo como mensaje adjunto
-    await ctx.send("Aquí está tu audio:", file=discord.File(mp3_filename))
-    os.remove(mp3_filename)  # Eliminar el archivo después de enviarlo
 
 # Ejecutar el bot
 client.run(BOT_TOKEN)
