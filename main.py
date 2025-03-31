@@ -1335,6 +1335,26 @@ async def despedir(ctx):
 
     await ctx.send(mensaje_despedida)  # Envía el mensaje de despedida
     await ctx.guild.leave()  # El bot se sale del servidor realmente
+
+#facebook descarga
+@client.command()
+async def facebook(ctx, url: str):
+    await ctx.send("🔄 Descargando video de Facebook, por favor espera...")
+    
+    ydl_opts = {
+        'format': 'best',
+        'outtmpl': 'video_facebook.mp4',
+    }
+    
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        try:
+            ydl.download([url])
+            await ctx.send("✅ Video descargado con éxito! Enviando...")
+            
+            with open("video_facebook.mp4", "rb") as video:
+                await ctx.send(file=discord.File(video, "facebook_video.mp4"))
+        except Exception as e:
+            await ctx.send(f"❌ Error al descargar el video: {str(e)}")
     
 # Ejecutar el bot
 client.run(BOT_TOKEN)
