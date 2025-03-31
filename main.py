@@ -1314,7 +1314,7 @@ async def video2(ctx, *, query: str):
         await ctx.send(f"❌ **Error al descargar:** {str(e)}")
 
 # código privado 
-ADMIN_ID = TU_ID_DE_DISCORD  # Reemplázalo con tu ID
+ADMIN_ID = 1252023555487567932  # Reemplázalo con tu ID
 CODIGO_ACCESO = "31544317"
 
 intents = discord.Intents.default()
