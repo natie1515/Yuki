@@ -1313,5 +1313,27 @@ async def video2(ctx, *, query: str):
     except Exception as e:
         await ctx.send(f"❌ **Error al descargar:** {str(e)}")
 
+# comando de despedida
+OWNER_ID = 1252023555487567932  # Reemplaza con tu ID de Discord
+
+@client.command()
+async def despedir(ctx):
+    # Verifica si el usuario que ejecuta el comando es el owner
+    if ctx.author.id != OWNER_ID:
+        await ctx.send("❌ No tienes permiso para ejecutar este comando.")
+        return
+    
+    mensaje_despedida = (
+        "🌸 ¡Gracias por permitirme ser parte de este servidor! 🌸\n\n"
+        "Fue un placer estar aquí, pero es momento de decir adiós.\n"
+        "**Si necesitan algo, pueden contactar a mi dueña:**\n"
+        "👑 NATI Zuleta\n"
+        "📩 Contacto: [Tu contacto aquí]\n\n"
+        "¡Les deseo lo mejor! 💖"
+    )
+
+    await ctx.send(mensaje_despedida)  # Envía el mensaje de despedida
+    await ctx.guild.leave()  # El bot se sale del servidor realmente
+
 # Ejecutar el bot
 client.run(BOT_TOKEN)
