@@ -1355,6 +1355,59 @@ async def facebook(ctx, url: str):
                 await ctx.send(file=discord.File(video, "facebook_video.mp4"))
         except Exception as e:
             await ctx.send(f"❌ Error al descargar el video: {str(e)}")
+
+#tiktok descarga
+@client.command()
+async def tt(ctx, url: str):
+    await ctx.send("🔄 Descargando video de TikTok, por favor espera...")
+    
+    ydl_opts = {
+        'format': 'best',
+        'outtmpl': 'video_tiktok.mp4',
+    }
+    
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        try:
+            ydl.download([url])
+            await ctx.send("✅ Video descargado con éxito! Enviando...")
+            
+            with open("video_tiktok.mp4", "rb") as video:
+                await ctx.send(file=discord.File(video, "tiktok_video.mp4"))
+        except Exception as e:
+            await ctx.send(f"❌ Error al descargar el video: {str(e)}")
+
+#youtuber descarga
+@client.command()
+async def yt(ctx, url: str):
+    await ctx.send("🔄 Descargando video de YouTube, por favor espera...")
+    
+    ydl_opts = {
+        'format': 'best',
+        'outtmpl': 'video_youtube.mp4',
+    }
+    
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        try:
+            info = ydl.extract_info(url, download=True)
+            video_title = info.get('title', 'Video Desconocido')
+            views = info.get('view_count', 'Desconocido')
+            uploader = info.get('uploader', 'Desconocido')
+            
+            embed = discord.Embed(
+                title=video_title,
+                description=f"👤 **Autor:** {uploader}\n👀 **Vistas:** {views:,}\n🔗 **Enlace:** [Ver en YouTube]({url})",
+                color=discord.Color.red()
+            )
+            
+            if 'thumbnail' in info:
+                embed.set_thumbnail(url=info['thumbnail'])
+            
+            await ctx.send("✅ Video descargado con éxito! Enviando...", embed=embed)
+            
+            with open("video_youtube.mp4", "rb") as video:
+                await ctx.send(file=discord.File(video, "youtube_video.mp4"))
+        except Exception as e:
+            await ctx.send(f"❌ Error al descargar el video: {str(e)}")           
     
 # Ejecutar el bot
 client.run(BOT_TOKEN)
