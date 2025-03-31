@@ -1260,5 +1260,59 @@ async def play2(ctx, url: str):
     else:
         await ctx.send("Hubo un error al descargar el audio.")
 
+#comando para descarga vídeo 2.0
+@client.command(name="video2")
+async def video2(ctx, *, query: str):
+    if not query:
+        await ctx.send("🎬 Escribe el nombre o el enlace del video.")
+        return
+
+    # Configuración de yt-dlp para búsqueda
+    ydl_opts = {
+        'quiet': True,
+        'extract_flat': True,
+    }
+
+    with ytdl.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(f"ytsearch:{query}", download=False)
+        if not info.get('entries'):
+            await ctx.send("⚠️ No se encontraron resultados.")
+            return
+
+        video = info['entries'][0]
+        video_url = video['url']
+        title = video.get('title', 'Título desconocido')
+        uploader = video.get('uploader', 'Desconocido')
+        duration = video.get('duration', 0)  # Duración en segundos
+        thumbnail = video.get('thumbnail', '')
+
+    # Convertir duración a formato hh:mm:ss
+    duration_str = f"{duration // 3600}:{(duration % 3600) // 60}:{duration % 60}" if duration >= 3600 else f"{(duration % 3600) // 60}:{duration % 60}"
+
+    try:
+        # Obtener enlace de descarga en 720p
+        response = requests.get(f'https://p.oceansaver.in/ajax/download.php?format=720&url={video_url}&api=dfcb6d76f2f6a9894gjkege8a4ab232222')
+        data = response.json()
+
+        if not data['success']:
+            raise Exception("No se pudo obtener el enlace de descarga.")
+
+        download_url = check_progress(data['id'])
+
+        # Crear embed con color rosado
+        embed = discord.Embed(
+            title=f"🌸 🎬 {title}",
+            description=f"📺 **Canal:** `{uploader}`\n⏳ **Duración:** `{duration_str}`\n🔗 [Ver en YouTube]({video_url})",
+            color=discord.Color.magenta()  # Color rosado
+        )
+        embed.set_thumbnail(url=thumbnail)
+        embed.add_field(name="⬇️ **Descargar**", value=f"[Haz clic aquí]({download_url})", inline=False)
+        
+        await ctx.send(embed=embed)
+
+    except Exception as e:
+        await ctx.send(f"❌ **Error al descargar:** {str(e)}")
+        
+
 # Ejecutar el bot
 client.run(BOT_TOKEN)
