@@ -19,6 +19,7 @@ import datetime
 import random
 import string
 import threading
+from PIL import Image, ImageDraw, ImageFont
 
 # Configuración
 BOT_TOKEN = 'MTI0NTU0NzcwOTg3NjkyODU0Mw.GliFcU.uK7Mt1qo8SPpGK1WQFCkD8J9lnj8OarnAx7O2M'  # Reemplaza con tu token
@@ -1316,24 +1317,59 @@ async def video2(ctx, *, query: str):
 # comando de despedida
 OWNER_ID = 1252023555487567932  # Reemplaza con tu ID de Discord
 
+# Lista de imágenes base para la despedida
+imagenes_aleatorias = [
+    "imagen1.jpg",
+    "imagen2.jpg",
+    "imagen3.jpg"
+]
+
+async def generar_imagen_con_texto(nombre_canal):
+    imagen_base = random.choice(imagenes_aleatorias)
+    imagen = Image.open(imagen_base)
+    draw = ImageDraw.Draw(imagen)
+    
+    try:
+        font = ImageFont.truetype("arial.ttf", 40)
+    except:
+        font = ImageFont.load_default()
+    
+    texto = f"Adiós {nombre_canal}"
+    text_x, text_y = 50, 50  # Posición del texto
+    draw.text((text_x, text_y), texto, fill=(255, 105, 180), font=font)  # Color rosado
+    
+    imagen_guardada = "despedida_temp.png"
+    imagen.save(imagen_guardada)
+    return imagen_guardada
+
 @client.command()
 async def despedir(ctx):
-    # Verifica si el usuario que ejecuta el comando es el owner
     if ctx.author.id != OWNER_ID:
         await ctx.send("❌ No tienes permiso para ejecutar este comando.")
         return
     
-    mensaje_despedida = (
-        "🌸 ¡Gracias por permitirme ser parte de este servidor! 🌸\n\n"
-        "Fue un placer estar aquí, pero es momento de decir adiós.\n"
-        "**Si necesitan algo, pueden contactar a mi dueña:**\n"
-        "👑 NATI Zuleta\n"
-        "📩 Contacto: [+5592996077349]\n\n"
-        "¡Les deseo lo mejor! 💖"
+    imagen_generada = await generar_imagen_con_texto(ctx.channel.name)
+    
+    embed = discord.Embed(
+        title="🌸 ¡Hasta pronto, querido servidor! 🌸",
+        description=(
+            "Fue un honor ser parte de este espacio, pero es momento de decir adiós.\n\n"
+            "✨ **Canal:** {}\n"
+            "💖 **Si necesitan algo, pueden contactar a mi dueña:**\n"
+            "👑 NATI Zuleta\n"
+            "📩 Contacto: [Mensaje privado](https://discord.com)\n\n"
+            "¡Les deseo lo mejor! 💕"
+        ).format(ctx.channel.name),
+        color=discord.Color.pink()
     )
-
-    await ctx.send(mensaje_despedida)  # Envía el mensaje de despedida
-    await ctx.guild.leave()  # El bot se sale del servidor realmente
+    embed.set_footer(text="Con cariño, su bot favorito 💕")
+    
+    with open(imagen_generada, "rb") as file:
+        imagen_discord = discord.File(file, filename="despedida.png")
+        embed.set_image(url="attachment://despedida.png")
+        await ctx.send(embed=embed, file=imagen_discord)
+    
+    await ctx.guild.leave()
 
 # Ejecutar el bot
 client.run(BOT_TOKEN)
