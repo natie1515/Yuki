@@ -1328,7 +1328,7 @@ async def despedir(ctx):
         "Fue un placer estar aquí, pero es momento de decir adiós.\n"
         "**Si necesitan algo, pueden contactar a mi dueña:**\n"
         "👑 NATI Zuleta\n"
-        "📩 Contacto: [Tu contacto aquí]\n\n"
+        "📩 Contacto: [+5592996077349]\n\n"
         "¡Les deseo lo mejor! 💖"
     )
 
