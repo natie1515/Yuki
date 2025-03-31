@@ -1313,42 +1313,5 @@ async def video2(ctx, *, query: str):
     except Exception as e:
         await ctx.send(f"❌ **Error al descargar:** {str(e)}")
 
-# código privado 
-ADMIN_ID = 1252023555487567932  # Reemplázalo con tu ID
-CODIGO_ACCESO = "31544317"
-
-intents = discord.Intents.default()
-intents.messages = True
-intents.dm_messages = True  # Habilitar mensajes directos
-bot = commands.Bot(command_prefix="!", intents=intents)
-
-usuarios_autorizados = set()  # Guarda los usuarios que han ingresado el código correctamente
-
-@client.event
-async def on_ready():
-    print(f'Bot conectado como {bot.user}')
-
-@client.event
-async def on_message(message):
-    if message.guild is None and not message.author.bot:  # Si es un DM y no es el bot
-        await notificar_admin(message.author)
-        if message.content.strip() == CODIGO_ACCESO:
-            usuarios_autorizados.add(message.author.id)
-            await message.channel.send("✅ Código correcto. Ahora puedes usar los comandos.")
-        else:
-            await message.channel.send("❌ Código incorrecto. Intenta de nuevo.")
-
-@client.command()
-async def saludo(ctx):
-    if ctx.author.id in usuarios_autorizados:
-        await ctx.send(f"Hola {ctx.author.mention}, tienes acceso al bot.")
-    else:
-        await ctx.send("⚠ Debes ingresar el código en privado para usar los comandos.")
-
-async def notificar_admin(usuario):
-    admin = await bot.fetch_user(ADMIN_ID)
-    if admin:
-        await admin.send(f"📩 **{usuario}** (`{usuario.id}`) le ha escrito al bot en privado.")
-
 # Ejecutar el bot
 client.run(BOT_TOKEN)
