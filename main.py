@@ -1371,23 +1371,50 @@ async def facebook(ctx, *urls: str):
 
 #tiktok descarga
 @client.command()
-async def tt(ctx, url: str):
-    await ctx.send("🔄 Descargando video de TikTok, por favor espera...")
-    
-    ydl_opts = {
-        'format': 'best',
-        'outtmpl': 'video_tiktok.mp4',
-    }
-    
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        try:
-            ydl.download([url])
-            await ctx.send("✅ Video descargado con éxito! Enviando...")
-            
-            with open("video_tiktok.mp4", "rb") as video:
-                await ctx.send(file=discord.File(video, "tiktok_video.mp4"))
-        except Exception as e:
-            await ctx.send(f"❌ Error al descargar el video: {str(e)}")
+async def tt(ctx, *urls: str):
+    if not urls:
+        await ctx.send("❌ Debes proporcionar al menos un enlace de TikTok.")
+        return
+
+    await ctx.send("🔄 Descargando videos de TikTok, por favor espera...")
+
+    for url in urls:
+        video_filename = f"video_tiktok_{hash(url)}.mp4"
+
+        ydl_opts = {
+            'format': 'best',
+            'outtmpl': video_filename,  # Nombre único para el archivo
+        }
+
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            try:
+                info = ydl.extract_info(url, download=True)
+                video_title = info.get('title', 'Video Desconocido')
+                views = info.get('view_count', 'Desconocido')
+                uploader = info.get('uploader', 'Desconocido')
+                thumbnail_url = info.get('thumbnail', '')  # Obtener miniatura si existe
+
+                # Crear un embed rosado con los detalles del video
+                embed = discord.Embed(
+                    title=video_title,
+                    description=f"👤 **Autor:** {uploader}\n👀 **Vistas:** {views:,}\n🔗 **Enlace:** [Ver en TikTok]({url})",
+                    color=discord.Color.from_rgb(255, 105, 180)  # Color rosado
+                )
+
+                if thumbnail_url:
+                    embed.set_thumbnail(url=thumbnail_url)
+
+                await ctx.send(f"✅ Video descargado con éxito! Enviando... {url}", embed=embed)
+
+                # Enviar el archivo
+                with open(video_filename, "rb") as video:
+                    await ctx.send(file=discord.File(video, video_filename))
+
+                # Eliminar el archivo después de enviarlo para no acumular archivos
+                os.remove(video_filename)
+
+            except Exception as e:
+                await ctx.send(f"❌ Error al descargar el video {url}: {str(e)}")
 
 #youtuber descarga
 @client.command()
