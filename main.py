@@ -1475,7 +1475,7 @@ RULES = [
     "🌹 20. Sonríe, diviértete y disfruta del servidor! 💕"
 ]
 
-@tasks.loop(days=15)
+@tasks.loop(seconds=1296000)  # 15 días en segundos
 async def recordar_reglas():
     await enviar_reglas()
 
