@@ -22,6 +22,7 @@ import threading
 
 # Configuración
 BOT_TOKEN = 'MTI0NTU0NzcwOTg3NjkyODU0Mw.GliFcU.uK7Mt1qo8SPpGK1WQFCkD8J9lnj8OarnAx7O2M'  # Reemplaza con tu token
+intents.members = True  # Necesario para gestionar miembros
 PREFIX = '#'  # Prefijo de comandos
 
 # Inicializar el cliente de Discord
@@ -1448,6 +1449,34 @@ async def yt(ctx, url: str):
                 await ctx.send(file=discord.File(video, "youtube_video.mp4"))
         except Exception as e:
             await ctx.send(f"❌ Error al descargar el video: {str(e)}")
+
+# Diccionario para advertencias
+warnings = {}
+
+# Verificar permisos de administrador
+def is_admin():
+    async def predicate(ctx):
+        return ctx.author.guild_permissions.administrator
+    return commands.check(predicate)
+
+# Comando para advertir a un usuario y expulsarlo si alcanza 3 advertencias
+@client.command()
+@is_admin()
+async def warn(ctx, member: discord.Member, *, reason="No especificado"):
+    user_warnings = warnings.get(member.id, 0) + 1
+    warnings[member.id] = user_warnings
+    
+    embed = discord.Embed(
+        title="⚠️ Advertencia ⚠️",
+        description=f"{member.mention} ha sido advertido.\n**Razón:** {reason}\n**Advertencias:** {user_warnings}/3",
+        color=discord.Color.from_rgb(255, 105, 180)  # Color rosa
+    )
+    await ctx.send(embed=embed)
+    
+    if user_warnings >= 3:
+        await ctx.guild.kick(member, reason="3 advertencias acumuladas")
+        await ctx.send(f"❌ {member.mention} ha sido expulsado por acumular 3 advertencias.")
+        warnings.pop(member.id)
     
 # Ejecutar el bot
 client.run(BOT_TOKEN)
