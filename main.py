@@ -1491,38 +1491,6 @@ async def kick(ctx, member: discord.Member, *, reason="No especificado"):
         color=discord.Color.from_rgb(255, 105, 180)  # Color rosa
     )
     await ctx.send(embed=embed)
-
-# Comando para mutear a un usuario en todo el servidor
-@client.command()
-@is_admin()
-async def mute(ctx, member: discord.Member, *, reason="No especificado"):
-    for channel in ctx.guild.channels:
-        overwrite = channel.overwrites_for(member)
-        overwrite.send_messages = False
-        await channel.set_permissions(member, overwrite=overwrite)
-    
-    embed = discord.Embed(
-        title="🔇 Usuario Muteado 🔇",
-        description=f"{member.mention} ha sido muteado en todo el servidor.\n**Razón:** {reason}",
-        color=discord.Color.from_rgb(255, 105, 180)  # Color rosa
-    )
-    await ctx.send(embed=embed)
-
-# Comando para desmutear a un usuario en todo el servidor
-@client.command()
-@is_admin()
-async def unmute(ctx, member: discord.Member):
-    for channel in ctx.guild.channels:
-        overwrite = channel.overwrites_for(member)
-        overwrite.send_messages = None
-        await channel.set_permissions(member, overwrite=overwrite)
-    
-    embed = discord.Embed(
-        title="🔊 Usuario Desmuteado 🔊",
-        description=f"{member.mention} ahora puede hablar en todo el servidor.",
-        color=discord.Color.from_rgb(255, 105, 180)  # Color rosa
-    )
-    await ctx.send(embed=embed)
     
 # Ejecutar el bot
 client.run(BOT_TOKEN)
