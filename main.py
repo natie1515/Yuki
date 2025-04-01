@@ -1346,18 +1346,33 @@ async def facebook(ctx, *urls: str):
     await ctx.send("🔄 Descargando videos de Facebook, por favor espera...")
 
     for url in urls:
-        # Usamos el nombre del video o el hash de la URL para hacer el nombre único
         video_filename = f"video_facebook_{hash(url)}.mp4"
 
         ydl_opts = {
             'format': 'best',
-            'outtmpl': video_filename,  # Usamos el nombre único para el archivo
+            'outtmpl': video_filename,  # Nombre único para el archivo
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             try:
-                ydl.download([url])
-                await ctx.send(f"✅ Video descargado con éxito! Enviando... {url}")
+                info = ydl.extract_info(url, download=True)
+                video_title = info.get('title', 'Video Desconocido')
+                views = info.get('view_count', 'Desconocido')
+                uploader = info.get('uploader', 'Desconocido')
+                thumbnail_url = info.get('thumbnail', '')  # Obtener miniatura si existe
+
+                # Crear un embed rosado con los detalles del video
+                embed = discord.Embed(
+                    title=video_title,
+                    description=f"👤 **Autor:** {uploader}\n👀 **Vistas:** {views:,}",
+                    color=discord.Color.from_rgb(255, 105, 180)  # Color rosado
+                )
+
+                if thumbnail_url:
+                    embed.set_thumbnail(url=thumbnail_url)
+
+                # Enviar el embed con la información y el video
+                await ctx.send(f"✅ Video descargado con éxito! Enviando...", embed=embed)
 
                 # Enviar el archivo
                 with open(video_filename, "rb") as video:
