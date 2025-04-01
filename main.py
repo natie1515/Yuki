@@ -29,7 +29,7 @@ client = commands.Bot(command_prefix="#", intents=intents)
 # Inicializar el cliente de Discord
 intents = discord.Intents.default()
 intents.message_content = True
-client = commands.Bot(command_prefix=PREFIX, intents=intents)
+PREFIX = '#'  # Prefijo de comandos
 
 # Función para verificar progreso de descarga
 def check_progress(id):
