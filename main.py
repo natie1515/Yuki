@@ -1466,6 +1466,17 @@ async def on_message(message):
     
     content = message.content.lower()
     
+    # repuesta Hala palabra clavé 
+    @client.event
+async def on_message(message):
+    if message.author == client.user:
+        return  # Evita que el bot responda a sus propios mensajes
+    
+    if message.guild is None:
+        return  # Ignorar mensajes en DM para evitar errores
+    
+    content = message.content.lower()
+    
     # Respuestas automáticas a palabras clave
     if "server" in content:
         embed = discord.Embed(
@@ -1475,6 +1486,8 @@ async def on_message(message):
         )
         embed.set_thumbnail(url=message.guild.icon.url if message.guild.icon else "")
         await message.channel.send(embed=embed)
+
+    await client.process_commands(message)  # Permite que otros comandos sigan funcionando
     
     elif "reglas" in content:
         embed = discord.Embed(
