@@ -21,7 +21,7 @@ import string
 import threading
 
 # Configuración
-BOT_TOKEN = 'MTI0NTU0NzcwOTg3NjkyODU0Mw.GliFcU.uK7Mt1qo8SPpGK1WQFCkD8J9lnj8OarnAx7O2M'  # Reemplaza con tu token
+BOT_TOKEN = 'MTM1Njc0MTQzNzY1OTU0OTg3Mg.Gf33R6.KNyGHH4KUBKmEqeCSYoSsm30kBiqwFymLOokt8'  # Reemplaza con tu token
 PREFIX = '#'  # Prefijo de comandos
 
 # Inicializar el cliente de Discord
