@@ -1,7 +1,7 @@
 import requests
 import yt_dlp as ytdl
 import random
-from discord.ext import commands
+from discord.ext import commands, tasks
 import time
 import requests
 import psutil
@@ -22,8 +22,9 @@ import threading
 
 # Configuración
 BOT_TOKEN = 'MTI0NTU0NzcwOTg3NjkyODU0Mw.GliFcU.uK7Mt1qo8SPpGK1WQFCkD8J9lnj8OarnAx7O2M'  # Reemplaza con tu token
-intents.members = True  # Necesario para gestionar miembros
-PREFIX = '#'  # Prefijo de comandos
+intents = discord.Intents.default()
+intents.messages = True  # Necesario para detectar mensajes
+client = commands.Bot(command_prefix="#", intents=intents)
 
 # Inicializar el cliente de Discord
 intents = discord.Intents.default()
@@ -1449,6 +1450,68 @@ async def yt(ctx, url: str):
                 await ctx.send(file=discord.File(video, "youtube_video.mp4"))
         except Exception as e:
             await ctx.send(f"❌ Error al descargar el video: {str(e)}")
+
+# Canal donde se enviarán las reglas (reemplaza con el ID correcto)
+RULES_CHANNEL_ID = 123456789012345678  # Reemplázalo con el ID de tu canal de reglas
+
+@client.event
+async def on_ready():
+    print(f"Conectado como {client.user}")
+    send_rules.start()
+
+@client.event
+async def on_message(message):
+    if message.author == client.user:
+        return  # Evita que el bot responda a sus propios mensajes
+    
+    content = message.content.lower()
+    
+    # Respuestas automáticas a palabras clave
+    if "server" in content:
+        embed = discord.Embed(
+            title="🌟 Información del Servidor 🌟",
+            description=f"Bienvenido a **{message.guild.name}** 🎉\nEste es un lugar increíble para compartir y conocer nuevas personas.\n\n✨ ¡Disfruta tu estadía!",
+            color=discord.Color.from_rgb(255, 105, 180)  # Color rosa
+        )
+        embed.set_thumbnail(url=message.guild.icon.url if message.guild.icon else "")
+        await message.channel.send(embed=embed)
+    
+    elif "reglas" in content:
+        embed = discord.Embed(
+            title="📜 Reglas del Servidor 📜",
+            description="1️⃣ Respeta a todos los miembros.\n2️⃣ No hagas spam ni publicidad.\n3️⃣ No compartas contenido NSFW.\n4️⃣ Usa los canales correctamente.\n5️⃣ Sigue las instrucciones del staff.\n6️⃣ ¡Diviértete y haz amigos! 😊",
+            color=discord.Color.from_rgb(255, 105, 180)
+        )
+        await message.channel.send(embed=embed)
+    
+    elif "admin" in content:
+        await message.channel.send("🔧 Si necesitas ayuda de un administrador, menciona a un mod o usa el canal de soporte.")
+    
+    elif "hola" in content or "hey" in content:
+        await message.channel.send(f"🌸 ¡Hola {message.author.mention}! Espero que tengas un gran día. 😊")
+    
+    elif "adiós" in content or "bye" in content:
+        await message.channel.send(f"💖 ¡Nos vemos {message.author.mention}! Vuelve pronto. 🌟")
+    
+    elif "evento" in content:
+        await message.channel.send("🎉 ¡Revisa los eventos del servidor en el canal de anuncios! No te los pierdas.")
+    
+    elif "gracias" in content:
+        await message.channel.send(f"💗 ¡De nada {message.author.mention}! Siempre estoy aquí para ayudar. 😊")
+    
+    await client.process_commands(message)  # Permite que otros comandos sigan funcionando
+
+# Tarea para enviar las reglas automáticamente cada 30 minutos
+tasks.loop(minutes=30)
+async def send_rules():
+    channel = client.get_channel(RULES_CHANNEL_ID)
+    if channel:
+        embed = discord.Embed(
+            title="📜 Reglas del Servidor 📜",
+            description="1️⃣ Respeta a todos los miembros.\n2️⃣ No hagas spam ni publicidad.\n3️⃣ No compartas contenido NSFW.\n4️⃣ Usa los canales correctamente.\n5️⃣ Sigue las instrucciones del staff.\n6️⃣ ¡Diviértete y haz amigos! 😊",
+            color=discord.Color.from_rgb(255, 105, 180)
+        )
+        await channel.send(embed=embed)
     
 # Ejecutar el bot
 client.run(BOT_TOKEN)
