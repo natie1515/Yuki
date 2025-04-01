@@ -1447,7 +1447,82 @@ async def yt(ctx, url: str):
             with open("video_youtube.mp4", "rb") as video:
                 await ctx.send(file=discord.File(video, "youtube_video.mp4"))
         except Exception as e:
-            await ctx.send(f"❌ Error al descargar el video: {str(e)}")           
+            await ctx.send(f"❌ Error al descargar el video: {str(e)}")
+
+#comandos de moderación 
+intents.members = True  # Necesario para gestionar miembros
+
+# Diccionario para advertencias
+warnings = {}
+
+# Verificar permisos de administrador
+def is_admin():
+    async def predicate(ctx):
+        return ctx.author.guild_permissions.administrator
+    return commands.check(predicate)
+
+# Comando para advertir a un usuario
+@client.command()
+@is_admin()
+async def warn(ctx, member: discord.Member, *, reason="No especificado"):
+    user_warnings = warnings.get(member.id, 0) + 1
+    warnings[member.id] = user_warnings
+    
+    embed = discord.Embed(
+        title="⚠️ Advertencia ⚠️",
+        description=f"{member.mention} ha sido advertido.\n**Razón:** {reason}\n**Advertencias:** {user_warnings}/3",
+        color=discord.Color.from_rgb(255, 105, 180)  # Color rosa
+    )
+    await ctx.send(embed=embed)
+    
+    if user_warnings >= 3:
+        await ctx.guild.kick(member, reason="3 advertencias acumuladas")
+        await ctx.send(f"❌ {member.mention} ha sido expulsado por acumular 3 advertencias.")
+        warnings.pop(member.id)
+
+# Comando para expulsar a un usuario
+@client.command()
+@is_admin()
+async def kick(ctx, member: discord.Member, *, reason="No especificado"):
+    await member.kick(reason=reason)
+    embed = discord.Embed(
+        title="❌ Usuario Expulsado ❌",
+        description=f"{member.mention} ha sido expulsado.\n**Razón:** {reason}",
+        color=discord.Color.from_rgb(255, 105, 180)  # Color rosa
+    )
+    await ctx.send(embed=embed)
+
+# Comando para mutear a un usuario en todo el servidor
+@client.command()
+@is_admin()
+async def mute(ctx, member: discord.Member, *, reason="No especificado"):
+    for channel in ctx.guild.channels:
+        overwrite = channel.overwrites_for(member)
+        overwrite.send_messages = False
+        await channel.set_permissions(member, overwrite=overwrite)
+    
+    embed = discord.Embed(
+        title="🔇 Usuario Muteado 🔇",
+        description=f"{member.mention} ha sido muteado en todo el servidor.\n**Razón:** {reason}",
+        color=discord.Color.from_rgb(255, 105, 180)  # Color rosa
+    )
+    await ctx.send(embed=embed)
+
+# Comando para desmutear a un usuario en todo el servidor
+@client.command()
+@is_admin()
+async def unmute(ctx, member: discord.Member):
+    for channel in ctx.guild.channels:
+        overwrite = channel.overwrites_for(member)
+        overwrite.send_messages = None
+        await channel.set_permissions(member, overwrite=overwrite)
+    
+    embed = discord.Embed(
+        title="🔊 Usuario Desmuteado 🔊",
+        description=f"{member.mention} ahora puede hablar en todo el servidor.",
+        color=discord.Color.from_rgb(255, 105, 180)  # Color rosa
+    )
+    await ctx.send(embed=embed)
     
 # Ejecutar el bot
 client.run(BOT_TOKEN)
