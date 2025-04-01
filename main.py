@@ -1449,7 +1449,8 @@ async def yt(ctx, url: str):
         except Exception as e:
             await ctx.send(f"❌ Error al descargar el video: {str(e)}")
 
-RULES_CHANNEL_ID = 1309770671533981737 # Reemplázalo con el ID del canal de reglas
+#reglas del servidor
+RULES_CHANNEL_ID = 1309770671533981737  # Reemplázalo con el ID del canal de reglas
 
 RULES = [
     "🌸 1. Sé amable y respeta a todos los miembros.",
@@ -1497,7 +1498,7 @@ async def enviar_reglas():
 @client.event
 async def on_ready():
     recordar_reglas.start()
-    print("El recordatorio de reglas ha iniciado.")
+    print("El recordatorio de reglas ha iniciado.")                                    
 
 # Ejecutar el bot
 client.run(BOT_TOKEN)
