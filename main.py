@@ -1463,23 +1463,29 @@ async def on_ready():
 async def on_message(message):
     if message.author == client.user:
         return  # Evita que el bot responda a sus propios mensajes
-    
-    if message.guild is None:
-        return  # Ignorar mensajes en DM para evitar errores
-    
-    content = message.content.lower()
-    
-    # Respuestas automáticas a palabras clave
-    if "server" in content:
-        embed = discord.Embed(
-            title="🌟 Información del Servidor 🌟",
-            description=f"Bienvenido a **{message.guild.name}** 🎉\nEste es un lugar increíble para compartir y conocer nuevas personas.\n\n✨ ¡Disfruta tu estadía!",
-            color=discord.Color.from_rgb(255, 105, 180)  # Color rosa
-        )
-        embed.set_thumbnail(url=message.guild.icon.url if message.guild.icon else "")
-        await message.channel.send(embed=embed)
 
-    await client.process_commands(message)  # Permite que otros comandos sigan funcionando
+    if not message.guild:  # Si el mensaje no viene de un servidor (es un DM)
+        print("Mensaje recibido en DM, ignorando.")
+        return
+    
+    try:
+        content = message.content.lower()
+
+        # Respuestas automáticas a palabras clave
+        if "server" in content:
+            server_name = message.guild.name if message.guild else "Servidor Desconocido"
+            embed = discord.Embed(
+                title="🌟 Información del Servidor 🌟",
+                description=f"Bienvenido a **{server_name}** 🎉\nEste es un lugar increíble para compartir y conocer nuevas personas.\n\n✨ ¡Disfruta tu estadía!",
+                color=discord.Color.from_rgb(255, 105, 180)  # Color rosa
+            )
+            embed.set_thumbnail(url=message.guild.icon.url if message.guild.icon else "")
+            await message.channel.send(embed=embed)
+
+        await client.process_commands(message)  # Permite que otros comandos sigan funcionando
+
+    except Exception as e:
+        print(f"Error en on_message: {e}")
     
     elif "reglas" in content:
         embed = discord.Embed(
