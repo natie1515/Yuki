@@ -1458,15 +1458,7 @@ RULES_CHANNEL_ID = 1299570359150055440  # Reemplázalo con el ID de tu canal de 
 async def on_ready():
     print(f"Conectado como {client.user}")
     send_rules.start()  # Iniciar la tarea para enviar las reglas
-
-@client.event
-async def on_message(message):
-    if message.author == client.user:
-        return  # Evita que el bot responda a sus propios mensajes
     
-    content = message.content.lower()
-    
-    # repuesta Hala palabra clavé 
     @client.event
 async def on_message(message):
     if message.author == client.user:
