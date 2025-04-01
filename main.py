@@ -1452,40 +1452,29 @@ async def yt(ctx, url: str):
             await ctx.send(f"❌ Error al descargar el video: {str(e)}")
 
 # Canal donde se enviarán las reglas (reemplaza con el ID correcto)
-RULES_CHANNEL_ID = 1299570359150055440  # Reemplázalo con el ID de tu canal de reglas
+RULES_CHANNEL_ID = 1309770671533981737  # Reemplázalo con el ID de tu canal de reglas
 
 @client.event
 async def on_ready():
     print(f"Conectado como {client.user}")
     send_rules.start()  # Iniciar la tarea para enviar las reglas
-    
-    @client.event
+
+@client.event
 async def on_message(message):
     if message.author == client.user:
         return  # Evita que el bot responda a sus propios mensajes
-
-    if not message.guild:  # Si el mensaje no viene de un servidor (es un DM)
-        print("Mensaje recibido en DM, ignorando.")
-        return
     
-    try:
-        content = message.content.lower()
-
-        # Respuestas automáticas a palabras clave
-        if "server" in content:
-            server_name = message.guild.name if message.guild else "Servidor Desconocido"
-            embed = discord.Embed(
-                title="🌟 Información del Servidor 🌟",
-                description=f"Bienvenido a **{server_name}** 🎉\nEste es un lugar increíble para compartir y conocer nuevas personas.\n\n✨ ¡Disfruta tu estadía!",
-                color=discord.Color.from_rgb(255, 105, 180)  # Color rosa
-            )
-            embed.set_thumbnail(url=message.guild.icon.url if message.guild.icon else "")
-            await message.channel.send(embed=embed)
-
-        await client.process_commands(message)  # Permite que otros comandos sigan funcionando
-
-    except Exception as e:
-        print(f"Error en on_message: {e}")
+    content = message.content.lower()
+    
+    # Respuestas automáticas a palabras clave
+    if "server" in content:
+        embed = discord.Embed(
+            title="🌟 Información del Servidor 🌟",
+            description=f"Bienvenido a **{message.guild.name}** 🎉\nEste es un lugar increíble para compartir y conocer nuevas personas.\n\n✨ ¡Disfruta tu estadía!",
+            color=discord.Color.from_rgb(255, 105, 180)  # Color rosa
+        )
+        embed.set_thumbnail(url=message.guild.icon.url if message.guild.icon else "")
+        await message.channel.send(embed=embed)
     
     elif "reglas" in content:
         embed = discord.Embed(
@@ -1523,6 +1512,6 @@ async def send_rules():
             color=discord.Color.from_rgb(255, 105, 180)
         )
         await channel.send(embed=embed)
-    
+
 # Ejecutar el bot
 client.run(BOT_TOKEN)
