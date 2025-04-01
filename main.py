@@ -1338,23 +1338,36 @@ async def despedir(ctx):
 
 #facebook descarga
 @client.command()
-async def facebook(ctx, url: str):
-    await ctx.send("🔄 Descargando video de Facebook, por favor espera...")
-    
-    ydl_opts = {
-        'format': 'best',
-        'outtmpl': 'video_facebook.mp4',
-    }
-    
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        try:
-            ydl.download([url])
-            await ctx.send("✅ Video descargado con éxito! Enviando...")
-            
-            with open("video_facebook.mp4", "rb") as video:
-                await ctx.send(file=discord.File(video, "facebook_video.mp4"))
-        except Exception as e:
-            await ctx.send(f"❌ Error al descargar el video: {str(e)}")
+async def facebook(ctx, *urls: str):
+    if not urls:
+        await ctx.send("❌ Debes proporcionar al menos un enlace de Facebook.")
+        return
+
+    await ctx.send("🔄 Descargando videos de Facebook, por favor espera...")
+
+    for url in urls:
+        # Usamos el nombre del video o el hash de la URL para hacer el nombre único
+        video_filename = f"video_facebook_{hash(url)}.mp4"
+
+        ydl_opts = {
+            'format': 'best',
+            'outtmpl': video_filename,  # Usamos el nombre único para el archivo
+        }
+
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            try:
+                ydl.download([url])
+                await ctx.send(f"✅ Video descargado con éxito! Enviando... {url}")
+
+                # Enviar el archivo
+                with open(video_filename, "rb") as video:
+                    await ctx.send(file=discord.File(video, video_filename))
+
+                # Eliminar el archivo después de enviarlo para no acumular archivos
+                os.remove(video_filename)
+
+            except Exception as e:
+                await ctx.send(f"❌ Error al descargar el video {url}: {str(e)}")
 
 #tiktok descarga
 @client.command()
