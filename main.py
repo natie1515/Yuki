@@ -1452,12 +1452,12 @@ async def yt(ctx, url: str):
             await ctx.send(f"❌ Error al descargar el video: {str(e)}")
 
 # Canal donde se enviarán las reglas (reemplaza con el ID correcto)
-RULES_CHANNEL_ID = 123456789012345678  # Reemplázalo con el ID de tu canal de reglas
+RULES_CHANNEL_ID = 1299570359150055440  # Reemplázalo con el ID de tu canal de reglas
 
 @client.event
 async def on_ready():
     print(f"Conectado como {client.user}")
-    send_rules.start()
+    send_rules.start()  # Iniciar la tarea para enviar las reglas
 
 @client.event
 async def on_message(message):
@@ -1502,7 +1502,7 @@ async def on_message(message):
     await client.process_commands(message)  # Permite que otros comandos sigan funcionando
 
 # Tarea para enviar las reglas automáticamente cada 30 minutos
-tasks.loop(minutes=30)
+@tasks.loop(minutes=30)
 async def send_rules():
     channel = client.get_channel(RULES_CHANNEL_ID)
     if channel:
