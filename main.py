@@ -1,7 +1,7 @@
 import requests
 import yt_dlp as ytdl
 import random
-from discord.ext import commands, tasks
+from discord.ext import commands
 import time
 import requests
 import psutil
@@ -22,14 +22,12 @@ import threading
 
 # Configuración
 BOT_TOKEN = 'MTI0NTU0NzcwOTg3NjkyODU0Mw.GliFcU.uK7Mt1qo8SPpGK1WQFCkD8J9lnj8OarnAx7O2M'  # Reemplaza con tu token
-intents = discord.Intents.default()
-intents.messages = True  # Necesario para detectar mensajes
-client = commands.Bot(command_prefix="#", intents=intents)
+PREFIX = '#'  # Prefijo de comandos
 
 # Inicializar el cliente de Discord
 intents = discord.Intents.default()
 intents.message_content = True
-PREFIX = '#'  # Prefijo de comandos
+client = commands.Bot(command_prefix=PREFIX, intents=intents)
 
 # Función para verificar progreso de descarga
 def check_progress(id):
