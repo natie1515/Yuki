@@ -1449,5 +1449,55 @@ async def yt(ctx, url: str):
         except Exception as e:
             await ctx.send(f"❌ Error al descargar el video: {str(e)}")
 
+RULES_CHANNEL_ID = 1309770671533981737 # Reemplázalo con el ID del canal de reglas
+
+RULES = [
+    "🌸 1. Sé amable y respeta a todos los miembros.",
+    "💖 2. No hagas spam ni flood en los canales.",
+    "✨ 3. Usa cada canal para su propósito específico.",
+    "🌷 4. Prohibido compartir contenido NSFW o inapropiado.",
+    "💬 5. Mantén un ambiente positivo y libre de toxicidad.",
+    "🎀 6. No insultes ni acoses a otros miembros.",
+    "🛑 7. No promociones otros servidores sin permiso.",
+    "🔒 8. No compartas información personal de nadie.",
+    "🌟 9. Sigue las indicaciones del staff en todo momento.",
+    "🎉 10. Disfruta y haz de este servidor un lugar hermoso.",
+    "💎 11. No uses lenguaje ofensivo ni discriminatorio.",
+    "📌 12. Respeta las normas y términos de Discord.",
+    "📢 13. No hagas publicidad sin autorización.",
+    "🔇 14. Evita el uso excesivo de mayúsculas y emojis.",
+    "🌸 15. No interrumpas las conversaciones con mensajes innecesarios.",
+    "💡 16. Usa el sentido común y sé cordial con todos.",
+    "🚫 17. No uses múltiples cuentas para evadir sanciones.",
+    "🎭 18. No te hagas pasar por otros miembros o moderadores.",
+    "🔧 19. Reporta cualquier problema al staff.",
+    "🌹 20. Sonríe, diviértete y disfruta del servidor! 💕"
+]
+
+@tasks.loop(days=15)
+async def recordar_reglas():
+    await enviar_reglas()
+
+async def enviar_reglas():
+    """Función para enviar el embed de reglas."""
+    channel = bot.get_channel(RULES_CHANNEL_ID)
+    if not channel:
+        return
+    
+    embed = discord.Embed(title="🌸 Reglas del Servidor 🌸", color=discord.Color.pink())
+    embed.set_thumbnail(url="https://i.imgur.com/0r8Y2ZQ.png")  # Imagen decorativa
+    
+    for rule in RULES:
+        embed.add_field(name="", value=rule, inline=False)
+    
+    embed.set_footer(text="Gracias por seguir las reglas y hacer de este servidor un lugar hermoso! 💕")
+    
+    await channel.send(embed=embed)
+
+@client.event
+async def on_ready():
+    recordar_reglas.start()
+    print("El recordatorio de reglas ha iniciado.")
+
 # Ejecutar el bot
 client.run(BOT_TOKEN)
