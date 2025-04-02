@@ -1525,8 +1525,30 @@ async def info1(ctx):
     
     await ctx.send(embed=embed)
 
-# Lista de palabras clave prohibidas (amenazas, contenido ilegal, etc.)
-PROHIBIDO = ["amenaza", "ilegal", "hack", "dox", "malware", "phishing", "estafa"]
+# Lista de palabras clave prohibidas (amenazas, contenido ilegal, groserías, ataques, etc.)
+PROHIBIDO = [
+    "amenaza", "ilegal", "hack", "dox", "malware", "phishing", "estafa",
+    "matar", "golpear", "robar", "fraude", "terrorismo", "pedofilia", "pornografía",
+    "violación", "secuestro", "asesinato", "suicidio", "bomba", "ataque", "extorsión",
+    "nazi", "racismo", "homofobia", "xenofobia", "acoso", "chantaje", "corrupción",
+    "falso", "mentira", "desinformación", "abusador", "traficante", "drogas", "armas",
+    "dinero falso", "piratería", "crimen", "explosivos", "hackear", "amenazante",
+    # Lista de groserías (100 palabras)
+    "puto", "puta", "mierda", "cabron", "idiota", "imbecil", "pendejo", "estupido", "maldito",
+    "perra", "zorra", "marica", "huevon", "culero", "chingada", "chingar", "cabrón", "coño",
+    "joder", "gilipollas", "capullo", "pajero", "pelotudo", "cagada", "cagar", "hostia",
+    "gonorrea", "tarado", "baboso", "hijo de puta", "chinga tu madre", "huevón", "carajo",
+    "huevo", "bobo", "mamón", "cornudo", "bastardo", "follar", "mojón", "soplapollas",
+    "chupapollas", "gil", "putear", "me cago en", "sucio", "mierdero", "puta madre",
+    "negro de mierda", "lameculos", "mamaguevo", "cabronazo", "chupapija", "pajillero",
+    "pajudo", "pelmazo", "pajón", "mierdoso", "asco de persona", "forro", "escoria",
+    "gilipolla", "cago en dios", "subnormal", "bobalicón", "pelagatos", "mamertazo",
+    "bocón", "desgraciado", "papanatas", "tonto del culo", "tocapelotas", "come mierda",
+    "infeliz", "remilputo", "chupaculos", "cagón", "tarúpido", "cabrón de mierda",
+    "malparido", "pajarraco", "estúpido de mierda", "cómeme los huevos", "mierda seca",
+    "cagarro", "estiraculos", "masturbador", "calientapollas", "papanatas",
+    "gilipichis", "gil de mierda", "caga leches", "pedorro", "chupamedias"
+]
 
 @client.event
 async def on_message(message):
@@ -1560,6 +1582,6 @@ async def on_member_update(before, after):
         log_channel = discord.utils.get(after.guild.text_channels, name="registro-seguridad")
         if log_channel:
             await log_channel.send(f"🔍 Posible actividad sospechosa detectada en {after.mention}")
-    
+
 # Ejecutar el bot
 client.run(BOT_TOKEN)
