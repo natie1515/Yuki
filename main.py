@@ -1496,14 +1496,17 @@ async def enviar_reglas():
     
     await channel.send(embed=embed)
 
-#comando info
-@client.event
-async def on_ready():
-    recordar_reglas.start()
-    print("El recordatorio de reglas ha iniciado.")
+# Verificar si el comando ya existe y eliminarlo antes de registrarlo
+if "info1" in client.commands:
+    del client.commands["info1"]
 
-@client.command()
-async def info1(ctx, member: discord.Member):
+@client.command(name="info1")
+async def info1(ctx):
+    if not ctx.message.mentions:
+        await ctx.send("Debes etiquetar a un usuario para ver su información.")
+        return
+    
+    member = ctx.message.mentions[0]
     embed = discord.Embed(
         title=f"💖 Información de {member.name} 💖",
         color=discord.Color.pink()
