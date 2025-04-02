@@ -19,6 +19,7 @@ import datetime
 import random
 import string
 import threading
+from datetime import datetime
 
 # Configuración
 BOT_TOKEN = 'MTM1Njc1MTIyMzI0MzQwNzUxMA.GTc8-g.50yQwjeuleAmEJuVZNaK1tcUcauW7v9-gyj2Jo'  # Reemplaza con tu token
@@ -1495,10 +1496,27 @@ async def enviar_reglas():
     
     await channel.send(embed=embed)
 
+#comando info
 @client.event
 async def on_ready():
     recordar_reglas.start()
-    print("El recordatorio de reglas ha iniciado.")                                    
+    print("El recordatorio de reglas ha iniciado.")
+
+@client.command()
+async def info(ctx, member: discord.Member):
+    embed = discord.Embed(
+        title=f"💖 Información de {member.name} 💖",
+        color=discord.Color.pink()
+    )
+    embed.set_thumbnail(url=member.avatar.url if member.avatar else member.default_avatar.url)
+    embed.add_field(name="🆔 ID Usuario:", value=f"`{member.id}`", inline=False)
+    embed.add_field(name="📅 Se unió al servidor:", value=f"{member.joined_at.strftime('%d de %B de %Y %H:%M')} (hace {round((datetime.utcnow() - member.joined_at).days / 30)} meses)", inline=False)
+    embed.add_field(name="📆 Cuenta creada:", value=f"{member.created_at.strftime('%d de %B de %Y %H:%M')} (hace {round((datetime.utcnow() - member.created_at).days / 30)} meses)", inline=False)
+    embed.add_field(name="🎭 Roles:", value=" ".join([role.mention for role in member.roles if role.name != "@everyone"]) or "No tiene roles", inline=False)
+    embed.set_footer(text=f"Solicitado por {ctx.author.name}", icon_url=ctx.author.avatar.url if ctx.author.avatar else ctx.author.default_avatar.url)
+    embed.timestamp = datetime.utcnow()
+    
+    await ctx.send(embed=embed)
 
 # Ejecutar el bot
 client.run(BOT_TOKEN)
