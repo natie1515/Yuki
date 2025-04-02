@@ -1500,6 +1500,8 @@ async def enviar_reglas():
 if "info1" in client.commands:
     del client.commands["info1"]
 
+from datetime import datetime, timezone
+
 @client.command(name="info1")
 async def info1(ctx):
     if not ctx.message.mentions:
@@ -1507,19 +1509,20 @@ async def info1(ctx):
         return
     
     member = ctx.message.mentions[0]
+    now = datetime.now(timezone.utc)
     embed = discord.Embed(
         title=f"💖 Información de {member.name} 💖",
         color=discord.Color.pink()
     )
     embed.set_thumbnail(url=member.avatar.url if member.avatar else member.default_avatar.url)
     embed.add_field(name="🆔 ID Usuario:", value=f"`{member.id}`", inline=False)
-    embed.add_field(name="📅 Se unió al servidor:", value=f"{member.joined_at.strftime('%d de %B de %Y %H:%M')} (hace {round((datetime.utcnow() - member.joined_at).days / 30)} meses)", inline=False)
-    embed.add_field(name="📆 Cuenta creada:", value=f"{member.created_at.strftime('%d de %B de %Y %H:%M')} (hace {round((datetime.utcnow() - member.created_at).days / 30)} meses)", inline=False)
+    embed.add_field(name="📅 Se unió al servidor:", value=f"{member.joined_at.strftime('%d de %B de %Y %H:%M')} (hace {round((now - member.joined_at).days / 30)} meses)", inline=False)
+    embed.add_field(name="📆 Cuenta creada:", value=f"{member.created_at.strftime('%d de %B de %Y %H:%M')} (hace {round((now - member.created_at).days / 30)} meses)", inline=False)
     embed.add_field(name="🎭 Roles:", value=" ".join([role.mention for role in member.roles if role.name != "@everyone"]) or "No tiene roles", inline=False)
     embed.set_footer(text=f"Solicitado por {ctx.author.name}", icon_url=ctx.author.avatar.url if ctx.author.avatar else ctx.author.default_avatar.url)
-    embed.timestamp = datetime.utcnow()
+    embed.timestamp = now
     
     await ctx.send(embed=embed)
-
+    
 # Ejecutar el bot
 client.run(BOT_TOKEN)
