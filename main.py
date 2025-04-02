@@ -21,6 +21,7 @@ import string
 import threading
 from datetime import datetime
 import re
+from datetime import timedelta
 
 # Configuración
 BOT_TOKEN = 'MTM1Njc1MTIyMzI0MzQwNzUxMA.GTc8-g.50yQwjeuleAmEJuVZNaK1tcUcauW7v9-gyj2Jo'  # Reemplaza con tu token
@@ -1604,6 +1605,34 @@ async def menu(ctx):
     embed.timestamp = discord.utils.utcnow()
     
     await ctx.send(embed=embed)
+
+#comado mute y unmute
+@client.command(name="mute1")
+async def mute1(ctx, member: discord.Member, tiempo: str):
+    # Guardar los roles actuales del usuario
+    roles_guardados = [role for role in member.roles if role.name != "@everyone"]
+    await member.edit(roles=[])
+    await ctx.send(f"🔇 {member.mention} ha sido muteado por {tiempo}.")
+    
+    # Convertir tiempo a segundos
+    tiempo_en_segundos = 0
+    match = re.findall(r'(\d+)([hm])', tiempo)
+    for cantidad, unidad in match:
+        if unidad == 'h':
+            tiempo_en_segundos += int(cantidad) * 3600
+        elif unidad == 'm':
+            tiempo_en_segundos += int(cantidad) * 60
+    
+    # Restaurar roles después del tiempo indicado
+    await asyncio.sleep(tiempo_en_segundos)
+    await member.edit(roles=roles_guardados)
+    await ctx.send(f"🔊 {member.mention} ha sido desmuteado automáticamente y se le han restaurado sus roles.")
+
+@client.command(name="unmute1")
+async def unmute1(ctx, member: discord.Member):
+    # Restaurar roles guardados manualmente
+    await member.edit(roles=[role for role in ctx.guild.roles if role.name != "@everyone"])
+    await ctx.send(f"🔊 {member.mention} ha sido desmuteado.")
     
 # Ejecutar el bot
 client.run(BOT_TOKEN)
