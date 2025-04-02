@@ -1606,11 +1606,13 @@ async def menu(ctx):
     
     await ctx.send(embed=embed)
 
-#comado mute y unmute
+# Diccionario para almacenar los roles de los usuarios muteados
+mute_roles = {}
+
 @client.command(name="mute1")
 async def mute1(ctx, member: discord.Member, tiempo: str):
     # Guardar los roles actuales del usuario
-    roles_guardados = [role for role in member.roles if role.name != "@everyone"]
+    mute_roles[member.id] = [role for role in member.roles if role.name != "@everyone"]
     await member.edit(roles=[])
     await ctx.send(f"🔇 {member.mention} ha sido muteado por {tiempo}.")
     
@@ -1625,14 +1627,18 @@ async def mute1(ctx, member: discord.Member, tiempo: str):
     
     # Restaurar roles después del tiempo indicado
     await asyncio.sleep(tiempo_en_segundos)
-    await member.edit(roles=roles_guardados)
-    await ctx.send(f"🔊 {member.mention} ha sido desmuteado automáticamente y se le han restaurado sus roles.")
+    if member.id in mute_roles:
+        await member.edit(roles=mute_roles.pop(member.id))
+        await ctx.send(f"🔊 {member.mention} ha sido desmuteado automáticamente y se le han restaurado sus roles.")
 
 @client.command(name="unmute1")
 async def unmute1(ctx, member: discord.Member):
-    # Restaurar roles guardados manualmente
-    await member.edit(roles=[role for role in ctx.guild.roles if role.name != "@everyone"])
-    await ctx.send(f"🔊 {member.mention} ha sido desmuteado.")
-    
+    # Restaurar roles guardados si existen
+    if member.id in mute_roles:
+        await member.edit(roles=mute_roles.pop(member.id))
+        await ctx.send(f"🔊 {member.mention} ha sido desmuteado y se le han restaurado sus roles.")
+    else:
+        await ctx.send(f"⚠️ {member.mention} no estaba muteado o no hay roles guardados.")
+        
 # Ejecutar el bot
 client.run(BOT_TOKEN)
