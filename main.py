@@ -1583,5 +1583,27 @@ async def on_member_update(before, after):
         if log_channel:
             await log_channel.send(f"🔍 Posible actividad sospechosa detectada en {after.mention}")
 
+#comando menu
+@client.command(name="menu")
+async def menu(ctx):
+    # Obtener la lista de comandos del bot
+    comandos = [f"#{command}" for command in client.commands]
+    comandos_texto = "\n".join(comandos)
+    
+    # URL de la imagen de la 'V' rosa brillante (sube una imagen y coloca el link aquí)
+    imagen_v_url = "https://imgur.com/a/wlrDTki"
+    
+    embed = discord.Embed(
+        title=f"{client.user.name} ✨ ᴠ ✨",  # Nombre del bot con 'V' brillante
+        description="Aquí están todos mis comandos disponibles:",
+        color=discord.Color.pink()
+    )
+    embed.set_thumbnail(url=imagen_v_url)
+    embed.add_field(name="📜 Comandos disponibles", value=comandos_texto, inline=False)
+    embed.set_footer(text=f"Solicitado por {ctx.author.name}", icon_url=ctx.author.avatar.url if ctx.author.avatar else ctx.author.default_avatar.url)
+    embed.timestamp = discord.utils.utcnow()
+    
+    await ctx.send(embed=embed)
+    
 # Ejecutar el bot
 client.run(BOT_TOKEN)
