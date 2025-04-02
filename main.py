@@ -1503,7 +1503,7 @@ async def on_ready():
     print("El recordatorio de reglas ha iniciado.")
 
 @client.command()
-async def info(ctx, member: discord.Member):
+async def info1(ctx, member: discord.Member):
     embed = discord.Embed(
         title=f"💖 Información de {member.name} 💖",
         color=discord.Color.pink()
