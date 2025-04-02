@@ -20,6 +20,7 @@ import random
 import string
 import threading
 from datetime import datetime
+import re
 
 # Configuración
 BOT_TOKEN = 'MTM1Njc1MTIyMzI0MzQwNzUxMA.GTc8-g.50yQwjeuleAmEJuVZNaK1tcUcauW7v9-gyj2Jo'  # Reemplaza con tu token
@@ -1523,6 +1524,42 @@ async def info1(ctx):
     embed.timestamp = now
     
     await ctx.send(embed=embed)
+
+# Lista de palabras clave prohibidas (amenazas, contenido ilegal, etc.)
+PROHIBIDO = ["amenaza", "ilegal", "hack", "dox", "malware", "phishing", "estafa"]
+
+@client.event
+async def on_message(message):
+    if message.author == client.user:
+        return
+    
+    # Verifica si el mensaje contiene palabras prohibidas
+    contenido = message.content.lower()
+    if any(re.search(fr"\b{palabra}\b", contenido) for palabra in PROHIBIDO):
+        await message.delete()
+        await message.channel.send(f"🚨 {message.author.mention}, tu mensaje ha sido eliminado por contener contenido prohibido.")
+        
+        # Aplicar ban si es necesario
+        try:
+            await message.author.ban(reason="Contenido prohibido detectado")
+            await message.channel.send(f"⛔ {message.author.mention} ha sido baneado por comportamiento inapropiado.")
+        except discord.Forbidden:
+            await message.channel.send("No tengo permisos para banear a este usuario.")
+    
+    await client.process_commands(message)
+
+@client.event
+async def on_member_join(member):
+    # Mensaje de bienvenida y revisión de seguridad
+    await member.send("Bienvenido al servidor. Recuerda respetar las reglas. Cualquier intento de ataque será bloqueado.")
+
+@client.event
+async def on_member_update(before, after):
+    # Detectar cambios sospechosos en roles o nombres de usuario
+    if before.nick != after.nick or before.roles != after.roles:
+        log_channel = discord.utils.get(after.guild.text_channels, name="registro-seguridad")
+        if log_channel:
+            await log_channel.send(f"🔍 Posible actividad sospechosa detectada en {after.mention}")
     
 # Ejecutar el bot
 client.run(BOT_TOKEN)
