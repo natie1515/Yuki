@@ -1587,22 +1587,32 @@ async def on_member_update(before, after):
     if before.roles != after.roles:
         await log_action(f"⚠️ {after.mention} cambió de roles: {before.roles} ➡️ {after.roles}")
 
-@client.command()
+@client.command(name="warn1")
 async def warn1(ctx, member: discord.Member, *, reason="No especificado"):
-    """ Sistema de Advertencias Mejorado """
-    if member.bot:
-        return
-    warnings[member.id] = warnings.get(member.id, 0) + 1
-    await ctx.send(f"⚠️ {member.mention} ha sido advertido. Total: {warnings[member.id]}/3")
-    await log_action(f"🚨 Advertencia para {member.mention}: {reason}")
+    if not ctx.author.guild_permissions.manage_messages:
+        return await ctx.send("❌ No tienes permisos para usar este comando.")
 
-    if warnings[member.id] >= 3:
-        muted_role = discord.utils.get(ctx.guild.roles, name="Muteado")
-        if muted_role:
-            await member.add_roles(muted_role)
-            await ctx.send(f"🚨 {member.mention} ha sido silenciado por acumulación de advertencias.")
-            await log_action(f"🚨 Usuario silenciado por 3 advertencias: {member.mention}")
+    user_id = member.id
+    warns[user_id] = warns.get(user_id, 0) + 1  # Suma advertencia
 
+    await ctx.send(f"⚠️ {member.mention} ha sido advertido. **Razón:** {reason} (**Advertencias:** {warns[user_id]}/3)")
+
+    # Si el usuario llega a 3 advertencias, lo silencia por 1 hora
+    if warns[user_id] >= 3:
+        try:
+            duration = discord.utils.utcnow() + datetime.timedelta(hours=1)
+            await member.timeout(duration, reason="Acumuló 3 advertencias")
+            await ctx.send(f"🔇 {member.mention} ha sido silenciado por **1 hora** debido a 3 advertencias.")
+
+            # Esperar 1 hora y luego quitar el silenciado
+            await asyncio.sleep(3600)  # 3600 segundos = 1 hora
+            await member.timeout(None, reason="Silencio finalizado")  
+            await ctx.send(f"✅ {member.mention} ya puede hablar nuevamente.")
+
+            warns[user_id] = 0  # Reiniciar advertencias después del castigo
+        except Exception as e:
+            await ctx.send(f"❌ No se pudo silenciar a {member.mention}. Error: {e}")
+            
 @client.command()
 async def seguridad(ctx, estado: str):
     """ Activa o Desactiva el Modo Seguridad """
