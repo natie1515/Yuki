@@ -1526,64 +1526,99 @@ async def info1(ctx):
     
     await ctx.send(embed=embed)
 
-# Lista de palabras clave prohibidas (amenazas, contenido ilegal, groserías, ataques, etc.)
-PROHIBIDO = [
-    "amenaza", "ilegal", "hack", "dox", "malware", "phishing", "estafa",
-    "matar", "golpear", "robar", "fraude", "terrorismo", "pedofilia", "pornografía",
-    "violación", "secuestro", "asesinato", "suicidio", "bomba", "ataque", "extorsión",
-    "nazi", "racismo", "homofobia", "xenofobia", "acoso", "chantaje", "corrupción",
-    "falso", "mentira", "desinformación", "abusador", "traficante", "drogas", "armas",
-    "dinero falso", "piratería", "crimen", "explosivos", "hackear", "amenazante",
-    # Lista de groserías (100 palabras)
-    "puto", "puta", "mierda", "cabron", "idiota", "imbecil", "pendejo", "estupido", "maldito",
-    "perra", "zorra", "marica", "huevon", "culero", "chingada", "chingar", "cabrón", "coño",
-    "joder", "gilipollas", "capullo", "pajero", "pelotudo", "cagada", "cagar", "hostia",
-    "gonorrea", "tarado", "baboso", "hijo de puta", "chinga tu madre", "huevón", "carajo",
-    "huevo", "bobo", "mamón", "cornudo", "bastardo", "follar", "mojón", "soplapollas",
-    "chupapollas", "gil", "putear", "me cago en", "sucio", "mierdero", "puta madre",
-    "negro de mierda", "lameculos", "mamaguevo", "cabronazo", "chupapija", "pajillero",
-    "pajudo", "pelmazo", "pajón", "mierdoso", "asco de persona", "forro", "escoria",
-    "gilipolla", "cago en dios", "subnormal", "bobalicón", "pelagatos", "mamertazo",
-    "bocón", "desgraciado", "papanatas", "tonto del culo", "tocapelotas", "come mierda",
-    "infeliz", "remilputo", "chupaculos", "cagón", "tarúpido", "cabrón de mierda",
-    "malparido", "pajarraco", "estúpido de mierda", "cómeme los huevos", "mierda seca",
-    "cagarro", "estiraculos", "masturbador", "calientapollas", "papanatas",
-    "gilipichis", "gil de mierda", "caga leches", "pedorro", "chupamedias"
-]
+# Lista de enlaces prohibidos
+blocked_links = ["http://", "https://", "discord.gg"]
+
+# Lista de palabras prohibidas
+banned_words = ["insulto1", "insulto2", "insulto3"]
+
+# Lista de advertencias de usuarios
+warnings = {}
+
+# Control de Modo Seguridad
+security_mode = True  
+
+# Canal donde se guardarán los logs de seguridad (Reemplazar con el ID de tu canal)
+LOG_CHANNEL_ID = 1311364136919109686
 
 @client.event
 async def on_message(message):
-    if message.author == client.user:
+    """ Anti-Link, Protección contra Flood, Menciones Masivas y Mensajes Tóxicos """
+    if message.author.bot:
         return
-    
-    # Verifica si el mensaje contiene palabras prohibidas
-    contenido = message.content.lower()
-    if any(re.search(fr"\b{palabra}\b", contenido) for palabra in PROHIBIDO):
+
+    # Anti-Link: Borra mensajes con links prohibidos
+    if any(link in message.content for link in blocked_links):
         await message.delete()
-        await message.channel.send(f"🚨 {message.author.mention}, tu mensaje ha sido eliminado por contener contenido prohibido.")
-        
-        # Aplicar ban si es necesario
-        try:
-            await message.author.ban(reason="Contenido prohibido detectado")
-            await message.channel.send(f"⛔ {message.author.mention} ha sido baneado por comportamiento inapropiado.")
-        except discord.Forbidden:
-            await message.channel.send("No tengo permisos para banear a este usuario.")
-    
+        await message.channel.send(f"⚠️ {message.author.mention}, los enlaces no están permitidos.")
+        await log_action(f"🚨 Mensaje eliminado de {message.author}: {message.content}")
+
+    # Protección contra flood (5 mensajes en 5 segundos)
+    author_id = message.author.id
+    if author_id in suspect_users:
+        suspect_users[author_id]["messages"] += 1
+        if suspect_users[author_id]["messages"] > 5:
+            await message.channel.send(f"⚠️ {message.author.mention}, estás enviando demasiados mensajes rápido.")
+            await message.author.timeout(duration=10)
+            await log_action(f"🚨 {message.author} fue silenciado por spam.")
+    else:
+        suspect_users[author_id] = {"messages": 1}
+
+    # Bloqueo de menciones masivas (@everyone y @here)
+    if "@everyone" in message.content or "@here" in message.content:
+        await message.delete()
+        await message.channel.send(f"⚠️ {message.author.mention}, no puedes mencionar a todos.")
+        await log_action(f"🚨 Mención masiva bloqueada de {message.author}")
+
+    # Bloqueo de palabras prohibidas
+    if any(word in message.content.lower() for word in banned_words):
+        await message.delete()
+        await message.channel.send(f"⚠️ {message.author.mention}, ese lenguaje no está permitido.")
+        await log_action(f"🚨 Mensaje eliminado por lenguaje inapropiado de {message.author}")
+
     await client.process_commands(message)
 
 @client.event
-async def on_member_join(member):
-    # Mensaje de bienvenida y revisión de seguridad
-    await member.send("Bienvenido al servidor. Recuerda respetar las reglas. Cualquier intento de ataque será bloqueado.")
-
-@client.event
 async def on_member_update(before, after):
-    # Detectar cambios sospechosos en roles o nombres de usuario
-    if before.nick != after.nick or before.roles != after.roles:
-        log_channel = discord.utils.get(after.guild.text_channels, name="registro-seguridad")
-        if log_channel:
-            await log_channel.send(f"🔍 Posible actividad sospechosa detectada en {after.mention}")
+    """ Detección de cambios sospechosos en roles """
+    if before.roles != after.roles:
+        await log_action(f"⚠️ {after.mention} cambió de roles: {before.roles} ➡️ {after.roles}")
 
+@client.command()
+async def warn(ctx, member: discord.Member, *, reason="No especificado"):
+    """ Sistema de Advertencias Mejorado """
+    if member.bot:
+        return
+    warnings[member.id] = warnings.get(member.id, 0) + 1
+    await ctx.send(f"⚠️ {member.mention} ha sido advertido. Total: {warnings[member.id]}/3")
+    await log_action(f"🚨 Advertencia para {member.mention}: {reason}")
+
+    if warnings[member.id] >= 3:
+        muted_role = discord.utils.get(ctx.guild.roles, name="Muteado")
+        if muted_role:
+            await member.add_roles(muted_role)
+            await ctx.send(f"🚨 {member.mention} ha sido silenciado por acumulación de advertencias.")
+            await log_action(f"🚨 Usuario silenciado por 3 advertencias: {member.mention}")
+
+@client.command()
+async def seguridad(ctx, estado: str):
+    """ Activa o Desactiva el Modo Seguridad """
+    global security_mode
+    if estado.lower() == "on":
+        security_mode = True
+        await ctx.send("🛡️ Modo Seguridad ACTIVADO.")
+    elif estado.lower() == "off":
+        security_mode = False
+        await ctx.send("⚠️ Modo Seguridad DESACTIVADO.")
+    else:
+        await ctx.send("❌ Usa `!seguridad on` o `!seguridad off`.")
+
+async def log_action(message):
+    """ Envía un mensaje al canal de logs """
+    log_channel = client.get_channel(LOG_CHANNEL_ID)
+    if log_channel:
+        await log_channel.send(message)
+        
 #comando menu
 @client.command(name="menu")
 async def menu(ctx):
