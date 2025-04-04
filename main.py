@@ -1526,6 +1526,9 @@ async def info1(ctx):
     
     await ctx.send(embed=embed)
 
+#moderacion
+suspect_users = {}  # Diccionario para rastrear usuarios sospechosos de flood
+
 # Lista de enlaces prohibidos
 blocked_links = ["http://", "https://", "discord.gg"]
 
