@@ -1600,13 +1600,13 @@ async def warn1(ctx, member: discord.Member, *, reason="No especificado"):
     # Si el usuario llega a 3 advertencias, lo silencia por 1 hora
     if warns[user_id] >= 3:
         try:
-            duration = discord.utils.utcnow() + datetime.timedelta(hours=1)
-            await member.timeout(duration, reason="Acumuló 3 advertencias")
+            until_time = discord.utils.utcnow() + datetime.timedelta(hours=1)
+            await member.timeout(until=until_time, reason="Acumuló 3 advertencias")
             await ctx.send(f"🔇 {member.mention} ha sido silenciado por **1 hora** debido a 3 advertencias.")
 
             # Esperar 1 hora y luego quitar el silenciado
             await asyncio.sleep(3600)  # 3600 segundos = 1 hora
-            await member.timeout(None, reason="Silencio finalizado")  
+            await member.timeout(until=None, reason="Silencio finalizado")  
             await ctx.send(f"✅ {member.mention} ya puede hablar nuevamente.")
 
             warns[user_id] = 0  # Reiniciar advertencias después del castigo
