@@ -1585,7 +1585,7 @@ async def on_member_update(before, after):
         await log_action(f"⚠️ {after.mention} cambió de roles: {before.roles} ➡️ {after.roles}")
 
 @client.command()
-async def warn(ctx, member: discord.Member, *, reason="No especificado"):
+async def warn1(ctx, member: discord.Member, *, reason="No especificado"):
     """ Sistema de Advertencias Mejorado """
     if member.bot:
         return
