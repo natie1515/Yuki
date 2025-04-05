@@ -22,7 +22,6 @@ import threading
 from datetime import datetime
 import re
 from datetime import timedelta
-import instaloader
 import glob
 from discord.ui import Button, View
 import YoutubeDL
