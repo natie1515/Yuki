@@ -24,6 +24,9 @@ import re
 from datetime import timedelta
 import instaloader
 import glob
+from discord.ui import Button, View
+import YoutubeDL
+import uuid
 
 # Configuración
 BOT_TOKEN = 'MTM1Njc1MTIyMzI0MzQwNzUxMA.GTc8-g.50yQwjeuleAmEJuVZNaK1tcUcauW7v9-gyj2Jo'  # Reemplaza con tu token
@@ -1690,50 +1693,98 @@ async def unmute1(ctx, member: discord.Member):
     else:
         await ctx.send(f"⚠️ {member.mention} no estaba muteado o no hay roles guardados.")
 
-# Instaloader para descargar videos
-loader = instaloader.Instaloader()
-
+#comando Instagram
 @client.command()
 async def insta(ctx, url: str):
-    """Descarga videos de Instagram (Reels, Stories, IGTV, Publicaciones, Álbumes) y los envía."""
-    await ctx.send("📥 Descargando contenido de Instagram...")
+    await ctx.send("📥 Analizando el enlace...")
 
     try:
-        # Extraer el código corto del enlace de Instagram
-        match = re.search(r"instagram\.com/(p|reel|tv|stories)/([\w\-]+)/?", url)
-        if not match:
-            await ctx.send("❌ URL no válida. Asegúrate de que sea un link de Instagram.")
-            return
-        
-        short_code = match.group(2)
+        unique_id = str(uuid.uuid4())
+        output_template = f"{unique_id}_%(title).80s.%(ext)s"
 
-        # Descargar la publicación
-        post = instaloader.Post.from_shortcode(loader.context, short_code)
-        loader.download_post(post, target="instagram_videos")
+        ydl_opts = {
+            "format": "bestvideo+bestaudio/best",
+            "outtmpl": output_template,
+            "quiet": True,
+            "merge_output_format": "mp4",
+            "noplaylist": True,
+        }
 
-        # Encontrar los archivos de imagen/video descargados
-        media_files = glob.glob("instagram_videos/*.mp4") + glob.glob("instagram_videos/*.jpg")
+        with YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=False)
 
-        if not media_files:
-            await ctx.send("❌ No se encontró contenido descargable.")
-            return
+        entries = info.get("entries", [info])  # Soporta carruseles y posts normales
 
-        # Enviar embed con información del post
+        media_list = []
+        for entry in entries:
+            media_list.append({
+                "title": entry.get("title", "Instagram"),
+                "url": entry.get("webpage_url"),
+                "thumb": entry.get("thumbnail"),
+                "author": entry.get("uploader"),
+                "views": entry.get("view_count"),
+                "likes": entry.get("like_count")
+            })
+
+        class MediaSelector(View):
+            def __init__(self):
+                super().__init__(timeout=60)
+                for i in range(len(media_list)):
+                    self.add_item(Button(label=f"Descargar {i+1}", style=discord.ButtonStyle.primary, custom_id=f"select_{i}"))
+
+            @discord.ui.button(label="Cancelar", style=discord.ButtonStyle.danger, custom_id="cancel")
+            async def cancel(self, interaction: discord.Interaction, button: Button):
+                await interaction.response.send_message("❌ Cancelado.", ephemeral=True)
+                self.stop()
+
+            async def interaction_check(self, interaction):
+                return interaction.user == ctx.author
+
+            async def on_timeout(self):
+                await ctx.send("⏱️ Tiempo agotado. Vuelve a intentarlo.")
+
+            async def on_error(self, interaction, error, item):
+                await interaction.response.send_message("⚠️ Error con los botones.", ephemeral=True)
+
+            async def interaction_handler(self, interaction):
+                if interaction.data["custom_id"].startswith("select_"):
+                    index = int(interaction.data["custom_id"].split("_")[1])
+                    media = media_list[index]
+
+                    try:
+                        with YoutubeDL(ydl_opts) as ydl:
+                            info = ydl.extract_info(media["url"], download=True)
+                            filename = ydl.prepare_filename(info)
+
+                        embed = discord.Embed(
+                            title="Contenido Descargado",
+                            description=f"**Autor:** {media['author'] or 'Desconocido'}",
+                            color=discord.Color.pink()
+                        )
+                        embed.set_thumbnail(url=media['thumb'])
+                        embed.add_field(name="Vistas", value=str(media['views']))
+                        embed.add_field(name="Likes", value=str(media['likes']))
+
+                        await interaction.response.send_message(embed=embed)
+                        await ctx.send(file=discord.File(filename))
+                        os.remove(filename)
+                    except Exception as e:
+                        await interaction.response.send_message(f"⚠️ Error al descargar: {e}")
+                    self.stop()
+
+        # Mostrar mensaje con botones
         embed = discord.Embed(
-            title="📸 Contenido Descargado",
-            description=f"📌 **Autor:** {post.owner_username}\n💬 **Descripción:** {post.caption[:500] if post.caption else 'Sin descripción'}",
+            title="Selecciona el archivo a descargar",
+            description="Este post tiene varios archivos. Pulsa un botón para elegir uno.",
             color=discord.Color.pink()
         )
-        embed.set_footer(text="Instagram Downloader Bot")
-        await ctx.send(embed=embed)
+        if media_list[0]["thumb"]:
+            embed.set_image(url=media_list[0]["thumb"])
 
-        # Enviar todos los archivos (videos e imágenes)
-        for file in media_files:
-            await ctx.send(file=discord.File(file))
-            os.remove(file)  # Eliminar después de enviarlo
+        await ctx.send(embed=embed, view=MediaSelector())
 
     except Exception as e:
-        await ctx.send(f"⚠️ Error: {e}")
+        await ctx.send(f"❌ Error: {e}")
         
 # Ejecutar el bot
 client.run(BOT_TOKEN)
