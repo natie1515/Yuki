@@ -24,7 +24,6 @@ import re
 from datetime import timedelta
 import glob
 from discord.ui import Button, View
-import YoutubeDL
 import uuid
 
 # Configuración
