@@ -22,6 +22,8 @@ import threading
 from datetime import datetime
 import re
 from datetime import timedelta
+import instaloader
+import glob
 
 # Configuración
 BOT_TOKEN = 'MTM1Njc1MTIyMzI0MzQwNzUxMA.GTc8-g.50yQwjeuleAmEJuVZNaK1tcUcauW7v9-gyj2Jo'  # Reemplaza con tu token
@@ -1687,6 +1689,51 @@ async def unmute1(ctx, member: discord.Member):
         await ctx.send(f"🔊 {member.mention} ha sido desmuteado y se le han restaurado sus roles.")
     else:
         await ctx.send(f"⚠️ {member.mention} no estaba muteado o no hay roles guardados.")
+
+# Instaloader para descargar videos
+loader = instaloader.Instaloader()
+
+@client.command()
+async def insta(ctx, url: str):
+    """Descarga videos de Instagram (Reels, Stories, IGTV, Publicaciones, Álbumes) y los envía."""
+    await ctx.send("📥 Descargando contenido de Instagram...")
+
+    try:
+        # Extraer el código corto del enlace de Instagram
+        match = re.search(r"instagram\.com/(p|reel|tv|stories)/([\w\-]+)/?", url)
+        if not match:
+            await ctx.send("❌ URL no válida. Asegúrate de que sea un link de Instagram.")
+            return
+        
+        short_code = match.group(2)
+
+        # Descargar la publicación
+        post = instaloader.Post.from_shortcode(loader.context, short_code)
+        loader.download_post(post, target="instagram_videos")
+
+        # Encontrar los archivos de imagen/video descargados
+        media_files = glob.glob("instagram_videos/*.mp4") + glob.glob("instagram_videos/*.jpg")
+
+        if not media_files:
+            await ctx.send("❌ No se encontró contenido descargable.")
+            return
+
+        # Enviar embed con información del post
+        embed = discord.Embed(
+            title="📸 Contenido Descargado",
+            description=f"📌 **Autor:** {post.owner_username}\n💬 **Descripción:** {post.caption[:500] if post.caption else 'Sin descripción'}",
+            color=discord.Color.pink()
+        )
+        embed.set_footer(text="Instagram Downloader Bot")
+        await ctx.send(embed=embed)
+
+        # Enviar todos los archivos (videos e imágenes)
+        for file in media_files:
+            await ctx.send(file=discord.File(file))
+            os.remove(file)  # Eliminar después de enviarlo
+
+    except Exception as e:
+        await ctx.send(f"⚠️ Error: {e}")
         
 # Ejecutar el bot
 client.run(BOT_TOKEN)
