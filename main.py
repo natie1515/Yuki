@@ -1686,6 +1686,21 @@ async def unmute1(ctx, member: discord.Member):
         await ctx.send(f"🔊 {member.mention} ha sido desmuteado y se le han restaurado sus roles.")
     else:
         await ctx.send(f"⚠️ {member.mention} no estaba muteado o no hay roles guardados.")
+
+@client.event
+async def on_message(message):
+    if message.author == client.user:
+        return
+
+    if message.guild is None:
+        # Es un DM, no intentes borrar ni ejecutar cosas del servidor
+        return
+
+    # Aquí ya es seguro hacer message.delete()
+    await message.delete()
+
+    # Y puedes procesar comandos normalmente si usas commands
+    await client.process_commands(message)
         
 # Ejecutar el bot
 client.run(BOT_TOKEN)
