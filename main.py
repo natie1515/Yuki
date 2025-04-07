@@ -22,7 +22,6 @@ import threading
 from datetime import datetime
 import re
 from discord.ui import Button, View
-import YoutubeDL
 import uuid, os
 
 # Configuración
