@@ -24,6 +24,8 @@ import re
 from discord.ui import Button, View
 import uuid, os
 from yt_dlp import YoutubeDL
+from bs4 import BeautifulSoup
+from uuid import uuid4
 
 # Configuración
 BOT_TOKEN = 'MTM1Njc1MTIyMzI0MzQwNzUxMA.GTc8-g.50yQwjeuleAmEJuVZNaK1tcUcauW7v9-gyj2Jo'  # Reemplaza con tu token
@@ -1691,6 +1693,55 @@ async def insta(ctx, url: str):
 
     except Exception as e:
         await ctx.send(f"❌ Error: {e}")
+
+#comando histor
+@client.command()
+async def histor(ctx, url: str):
+    await ctx.send("⏳ Descargando historia de TikTok...")
+
+    try:
+        if "tiktok.com" not in url:
+            return await ctx.send("❌ El enlace no parece ser válido de TikTok.")
+
+        # Simular navegador para scrapear
+        headers = {"User-Agent": "Mozilla/5.0"}
+        response = requests.get(url, headers=headers)
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        video_tag = soup.find("meta", property="og:video")
+        title_tag = soup.find("meta", property="og:title")
+        thumbnail_tag = soup.find("meta", property="og:image")
+
+        if not video_tag:
+            return await ctx.send("❌ No se pudo encontrar el video.")
+
+        video_url = video_tag["content"]
+        title = title_tag["content"] if title_tag else "Historia TikTok"
+        thumbnail = thumbnail_tag["content"] if thumbnail_tag else None
+
+        filename = f"tiktok_story_{uuid4()}.mp4"
+        video_data = requests.get(video_url, headers=headers).content
+
+        with open(filename, "wb") as f:
+            f.write(video_data)
+
+        embed = discord.Embed(
+            title=title[:250],
+            description=f"🔗 [Ver en TikTok]({url})",
+            color=discord.Color.purple(),
+            timestamp=datetime.utcnow()
+        )
+        if thumbnail:
+            embed.set_thumbnail(url=thumbnail)
+        embed.set_footer(text="Historia TikTok")
+
+        await ctx.send(embed=embed)
+        await ctx.send(file=discord.File(filename))
+        os.remove(filename)
+
+    except Exception as e:
+        await ctx.send(f"❌ Error: {str(e)}")
+
         
         
 # Ejecutar el bot
