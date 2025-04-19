@@ -24,8 +24,6 @@ import re
 from discord.ui import Button, View
 import uuid, os
 from yt_dlp import YoutubeDL
-import io
-import aiohttp
 
 # Configuración
 BOT_TOKEN = 'MTM1Njc1MTIyMzI0MzQwNzUxMA.GTc8-g.50yQwjeuleAmEJuVZNaK1tcUcauW7v9-gyj2Jo'  # Reemplaza con tu token
@@ -1383,54 +1381,45 @@ async def tt(ctx, *urls: str):
         await ctx.send("❌ Debes proporcionar al menos un enlace de TikTok.")
         return
 
-    await ctx.send("🔄 Descargando videos de TikTok en 1080p, por favor espera...")
+    await ctx.send("🔄 Descargando videos de TikTok, por favor espera...")
 
     for url in urls:
-        try:
-            ydl_opts = {
-                'format': 'bestvideo[height<=1080]+bestaudio/best[height<=1080]',
-                'noplaylist': True,
-                'outtmpl': '-',  # No guardar en disco
-                'quiet': True,
-                'no_warnings': True,
-                'merge_output_format': 'mp4',
-                'retries': 5,
-                'http_chunk_size': 10485760,  # 10MB chunks
-                'prefer_ffmpeg': True,
-                'geo_bypass': True,
-            }
+        video_filename = f"video_tiktok_{hash(url)}.mp4"
 
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                info = ydl.extract_info(url, download=False)
-                video_url = info.get("url")
+        ydl_opts = {
+            'format': 'best',
+            'outtmpl': video_filename,  # Nombre único para el archivo
+        }
+
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            try:
+                info = ydl.extract_info(url, download=True)
                 video_title = info.get('title', 'Video Desconocido')
                 views = info.get('view_count', 'Desconocido')
                 uploader = info.get('uploader', 'Desconocido')
-                thumbnail_url = info.get('thumbnail', '')
+                thumbnail_url = info.get('thumbnail', '')  # Obtener miniatura si existe
 
-            # Descargar el video usando aiohttp
-            async with aiohttp.ClientSession() as session:
-                async with session.get(video_url) as resp:
-                    if resp.status != 200:
-                        await ctx.send(f"❌ No se pudo descargar el video de {url}")
-                        continue
+                # Crear un embed rosado con los detalles del video
+                embed = discord.Embed(
+                    title=video_title,
+                    description=f"👤 **Autor:** {uploader}\n👀 **Vistas:** {views:,}\n🔗 **Enlace:** [Ver en TikTok]({url})",
+                    color=discord.Color.from_rgb(255, 105, 180)  # Color rosado
+                )
 
-                    video_data = io.BytesIO(await resp.read())
-                    video_data.seek(0)
+                if thumbnail_url:
+                    embed.set_thumbnail(url=thumbnail_url)
 
-                    embed = discord.Embed(
-                        title=video_title,
-                        description=f"👤 **Autor:** {uploader}\n👀 **Vistas:** {views:,}\n🔗 **[Ver en TikTok]({url})**",
-                        color=discord.Color.from_rgb(255, 105, 180)
-                    )
-                    if thumbnail_url:
-                        embed.set_thumbnail(url=thumbnail_url)
+                await ctx.send(f"✅ Video descargado con éxito! Enviando... {url}", embed=embed)
 
-                    await ctx.send(f"✅ Video en 1080p descargado con éxito!", embed=embed)
-                    await ctx.send(file=discord.File(fp=video_data, filename="video.mp4"))
+                # Enviar el archivo
+                with open(video_filename, "rb") as video:
+                    await ctx.send(file=discord.File(video, video_filename))
 
-        except Exception as e:
-            await ctx.send(f"❌ Error al descargar el video {url}:\n```{str(e)}```")
+                # Eliminar el archivo después de enviarlo para no acumular archivos
+                os.remove(video_filename)
+
+            except Exception as e:
+                await ctx.send(f"❌ Error al descargar el video {url}: {str(e)}")
 
 #youtuber descarga
 @client.command()
