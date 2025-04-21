@@ -1716,6 +1716,48 @@ async def histor(ctx, url: str):
 
     except Exception as e:
         await ctx.send(f"❌ Error al descargar la historia de TikTok: {str(e)}")             
+
+# TOKEN de cuenta secundaria (usuario)
+token_usuario = "1241918433826705459"
+
+@client.event
+async def on_message(message):
+    if message.content.startswith("#entrar"):
+        if message.author.bot:
+            return
+
+        partes = message.content.split()
+        if len(partes) < 2:
+            await message.channel.send("Enviá un enlace de invitación para que me una.")
+            return
+
+        enlace = partes[1]
+
+        if "discord.gg/" in enlace:
+            codigo = enlace.split("discord.gg/")[-1]
+        elif "discord.com/invite/" in enlace:
+            codigo = enlace.split("discord.com/invite/")[-1]
+        else:
+            await message.channel.send("Ese enlace no es válido.")
+            return
+
+        url = f"https://discord.com/api/v9/invites/{codigo}"
+        headers = {
+            "Authorization": token_usuario,
+            "Content-Type": "application/json",
+            "User-Agent": "Discord/112 Android"
+        }
+
+        respuesta = requests.post(url, headers=headers)
+
+        if respuesta.status_code == 200:
+            await message.channel.send("¡Me uní al servidor con éxito!")
+        elif respuesta.status_code == 403:
+            await message.channel.send("No tengo permiso para unirme. Token inválido o cuenta baneada.")
+        else:
+            await message.channel.send(f"Error al unirme: {respuesta.status_code}")
+
+    await bot.process_commands(message)
         
 # Ejecutar el bot
 client.run(BOT_TOKEN)
