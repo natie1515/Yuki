@@ -24,6 +24,7 @@ import re
 from discord.ui import Button, View
 import uuid, os
 from yt_dlp import YoutubeDL
+import io
 
 # Configuración
 BOT_TOKEN = 'MTM1Njc1MTIyMzI0MzQwNzUxMA.GTc8-g.50yQwjeuleAmEJuVZNaK1tcUcauW7v9-gyj2Jo'  # Reemplaza con tu token
