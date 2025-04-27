@@ -27,7 +27,6 @@ from yt_dlp import YoutubeDL
 import io
 from datetime import timedelta
 from datetime import timezone
-import speech_recognition as sr
 
 # Configuración
 BOT_TOKEN = 'MTM1Njc1MTIyMzI0MzQwNzUxMA.GTc8-g.50yQwjeuleAmEJuVZNaK1tcUcauW7v9-gyj2Jo'  # Reemplaza con tu token
@@ -2002,56 +2001,6 @@ def chistes_random():
         "¿Sabes qué hace una vaca en un terremoto? ¡Leche agitada!"
     ]
 
-#nota de voz
-# Función para convertir el audio a texto
-def convertir_audio_a_texto(audio_file):
-    recognizer = sr.Recognizer()
-    try:
-        # Usar el archivo de audio con SpeechRecognition
-        with sr.AudioFile(audio_file) as source:
-            audio = recognizer.record(source)
-            texto = recognizer.recognize_google(audio)
-            return texto
-    except Exception as e:
-        print(f"Error al procesar el audio: {e}")
-        return None
 
-# Evento cuando el bot recibe un mensaje
-@client.event
-async def on_message(message):
-    if message.author.bot:
-        return
-
-    # Si el mensaje es una mención del bot y contiene un archivo de voz
-    if client.user in message.mentions and message.attachments:
-        # Buscar el primer archivo adjunto (supuesto archivo de audio)
-        audio_attachment = message.attachments[0]
-        if audio_attachment.filename.endswith(('.mp3', '.ogg', '.wav')):
-            # Descargar el archivo
-            audio_file = await audio_attachment.save(audio_attachment.filename)
-            await message.channel.send("Recibí tu mensaje de voz. Procesando...")
-
-            # Convertir el audio a texto
-            texto = convertir_audio_a_texto(audio_file)
-            if texto:
-                # Responder basado en el texto
-                await responder_a_pregunta(message, texto)
-            else:
-                await message.channel.send("No pude entender lo que dijiste. Intenta de nuevo.")
-        else:
-            await message.channel.send("Por favor, sube un archivo de audio válido.")
-    else:
-        await client.process_commands(message)
-
-# Función para responder a una pregunta basada en el texto convertido
-async def responder_a_pregunta(message, texto):
-    # Aquí puedes integrar cualquier lógica para responder según el texto
-    if "hola" in texto.lower():
-        await message.channel.send("¡Hola! ¿Cómo estás?")
-    elif "cómo estás" in texto.lower():
-        await message.channel.send("Estoy genial, ¡gracias por preguntar!")
-    else:
-        await message.channel.send(f"Recibí tu pregunta: {texto}. ¡Estoy pensando en la respuesta!")
-            
 # Ejecutar el bot
 client.run(BOT_TOKEN)
