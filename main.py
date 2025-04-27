@@ -1715,8 +1715,86 @@ async def histor(ctx, url: str):
         os.remove(filename)
 
     except Exception as e:
-        await ctx.send(f"❌ Error al descargar la historia de TikTok: {str(e)}")             
-import requests
+        await ctx.send(f"❌ Error al descargar la historia de TikTok: {str(e)}")     
 
+#comando pinterest
+@client.event
+async def on_message(message):
+    if message.author.bot:
+        return
+
+    if message.content.startswith("#pint"):
+        partes = message.content.split()
+        if len(partes) < 2:
+            await message.channel.send("Enviá un enlace de Pinterest para descargar contenido.")
+            return
+
+        enlace = partes[1]
+
+        if not ("pinterest.com" in enlace or "pin.it" in enlace):
+            await message.channel.send("Ese no parece ser un enlace válido de Pinterest.")
+            return
+
+        try:
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+            }
+            # Si es pin.it, seguir redirección
+            response = requests.get(enlace, headers=headers, allow_redirects=True)
+            final_url = response.url
+
+            # Descargar la página
+            page = requests.get(final_url, headers=headers).text
+
+            # Buscar datos de imagen/video
+            media_match = re.search(r'"contentUrl":"(https://[^"]+)"', page)
+            owner_match = re.search(r'"username":"([^"]+)"', page)
+            data_match = re.search(r'"aggregated_pin_data":({.*?})', page)
+
+            if media_match:
+                media_url = media_match.group(1).replace("\\u002F", "/")
+            else:
+                await message.channel.send("No encontré imagen ni video en ese enlace.")
+                return
+
+            autor = owner_match.group(1) if owner_match else "desconocido"
+
+            # Parsear las estadísticas
+            vistas = "desconocidas"
+            corazones = "desconocidos"
+            if data_match:
+                data_json = json.loads(data_match.group(1))
+                vistas = data_json.get("view_count", "desconocidas")
+                corazones = data_json.get("aggregated_stats", {}).get("saves", "desconocidos")
+
+            # Descargar el archivo
+            media_data = requests.get(media_url, headers=headers).content
+            media_file = io.BytesIO(media_data)
+
+            # Detectar tipo archivo
+            if media_url.endswith(".mp4"):
+                media_file.name = "pinterest.mp4"
+            else:
+                media_file.name = "pinterest.jpg"
+
+            # Crear embed bonito
+            embed = discord.Embed(
+                title="Descargador de Pinterest",
+                description=(
+                    f"**Publicado por:** {autor}\n"
+                    f"**Vistas:** {vistas}\n"
+                    f"**Corazones:** {corazones}\n"
+                    f"**Pedido por:** {message.author.mention}"
+                ),
+                color=0xE60023  # Rojo Pinterest
+            )
+            embed.set_thumbnail(url=media_url)
+            embed.set_footer(text="Contenido de Pinterest")
+
+            await message.channel.send(embed=embed, file=discord.File(media_file))
+
+        except Exception as e:
+            await message.channel.send(f"Ocurrió un error: {e}")
+            
 # Ejecutar el bot
 client.run(BOT_TOKEN)
