@@ -2001,6 +2001,53 @@ def chistes_random():
         "¿Sabes qué hace una vaca en un terremoto? ¡Leche agitada!"
     ]
 
+#descarga Instagram
+# Lista temporal para almacenar enlaces procesados durante la sesión
+processed_links = set()
+
+@client.command()
+async def descargar(ctx, url: str):
+    """Comando para descargar contenido de Instagram y enviarlo al canal"""
+    # Verificar si el enlace es de Instagram
+    if "instagram.com" not in url:
+        await ctx.send("El enlace no es de Instagram. Por favor, ingresa un enlace válido.")
+        return
+
+    # Verificar si el enlace ya ha sido procesado durante esta sesión
+    if url in processed_links:
+        await ctx.send("Este contenido ya ha sido enviado durante esta sesión.")
+        return
+
+    # URL de DownloadGram para descargar contenido de Instagram
+    download_url = f"https://downloadgram.org/api/?url={url}"
+
+    # Solicitar la descarga del contenido
+    response = requests.get(download_url)
+
+    if response.status_code == 200:
+        # Obtener el enlace de descarga desde la respuesta
+        data = response.json()
+        if data.get("status") == "success":
+            download_link = data.get("url")
+
+            # Información adicional (vistas, likes, etc.)
+            likes = 150  # Ejemplo de número de likes
+            views = 500  # Ejemplo de número de vistas
+
+            # Enviar el video al canal
+            if "mp4" in download_link:
+                await ctx.send(f"¡Aquí está el video! Likes: {likes} | Vistas: {views}")
+                await ctx.send(download_link)  # Enviar el enlace del vídeo
+            else:
+                await ctx.send(f"¡Aquí está la imagen! Likes: {likes} | Vistas: {views}")
+                await ctx.send(download_link)  # Enviar el enlace de la imagen
+
+            # Agregar el enlace a la lista temporal para evitar duplicados durante esta sesión
+            processed_links.add(url)
+        else:
+            await ctx.send("Hubo un error al procesar el enlace de Instagram. Intenta nuevamente.")
+    else:
+        await ctx.send("Hubo un problema con la descarga. Intenta más tarde.")
 
 # Ejecutar el bot
 client.run(BOT_TOKEN)
